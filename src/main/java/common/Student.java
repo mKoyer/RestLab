@@ -2,9 +2,17 @@ package common;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import endpoints.StudentsEndpoint;
+import lombok.AllArgsConstructor;
+import org.bson.types.ObjectId;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLinks;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
+import resources.MarksResource;
+import resources.StudentsResource;
+import resources.SubjectsResource;
 
 import javax.ws.rs.core.Link;
 import javax.xml.bind.annotation.*;
@@ -13,19 +21,37 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@AllArgsConstructor
+@Entity
 @XmlRootElement(name = "student")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Student
 {
 
     @InjectLinks({
-            @InjectLink(resource = StudentsEndpoint.class, rel = "parent", method = "getStudents",style = InjectLink.Style.ABSOLUTE),
-            @InjectLink(resource = StudentsEndpoint.class, rel = "self", method = "getStudent", style = InjectLink.Style.ABSOLUTE)
+            @InjectLink(resource = StudentsResource.class, rel = "self",  style = InjectLink.Style.ABSOLUTE),
+            @InjectLink(resource = SubjectsResource.class, rel = "subjects", style = InjectLink.Style.ABSOLUTE),
+            @InjectLink(resource = MarksResource.class, rel = "marks", style = InjectLink.Style.ABSOLUTE),
     })
     @XmlElement(name = "links")
     @XmlElementWrapper(name = "links")
     @XmlJavaTypeAdapter(Link.JaxbAdapter.class)
     List<Link> links;
+
+    @Id
+    @XmlTransient
+    private ObjectId id;
+
+
+    public ObjectId getId()
+    {
+        return id;
+    }
+
+    public void setId(ObjectId id)
+    {
+        this.id = id;
+    }
 
     public List<Link> getLinks()
     {
@@ -36,7 +62,7 @@ public class Student
     {
         this.links = links;
     }
-
+    @Indexed(options = @IndexOptions(unique = true))
     private int index;
     private String name;
     private String surname;
@@ -48,7 +74,6 @@ public class Student
 
     public Student()
     {
-        this.index = Utils.getStudentIndex();
         this.marks = new ArrayList<>();
     }
 
@@ -114,6 +139,7 @@ public class Student
     {
         this.marks.add(mark);
     }
+
     public void remove(Mark mark)
     {
         this.marks.remove(mark);

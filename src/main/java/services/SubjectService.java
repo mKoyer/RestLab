@@ -1,7 +1,11 @@
 package services;
 
 import common.Subject;
+import dao.IDao;
+import dao.MongoDao;
+import org.bson.types.ObjectId;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
@@ -10,66 +14,41 @@ import java.util.List;
 
 public class SubjectService
 {
-    private List<Subject> subjects;
-    private static SubjectService subjectsService;
+    private IDao dao = MongoDao.getInstance();
+    private static SubjectService subjectService;
+    private SubjectService(){ }
 
-    public static synchronized SubjectService getInstance()
-    {
-        if(subjectsService == null){
-            subjectsService = new SubjectService();
-        }
-        return subjectsService;
+    public Subject getSubject(ObjectId id){
+        return dao.getSubject(id);
     }
 
-    private SubjectService()
-    {
-        subjects = new ArrayList<>();
-        Subject math = new Subject("TPSI","TPSI_TEACHER");
-        Subject pe = new Subject("PE","PE_TEACHER");
-        Subject english = new Subject("ENGLISH","ENGLISH_TEACHER");
-
-        subjects.add(math);
-        subjects.add(pe);
-        subjects.add(english);
+    public List<Subject> getSubjects(MultivaluedMap<String, String> params){
+        return dao.getSubjects(params);
     }
 
-    public Subject getSubject(long id)
-    {
-        for(Subject subject: subjects){
-            if(subject.getId() == id){
-                return subject;
-            }
-        }
-        return null;
+    public Subject addSubject(Subject subject){
+        return dao.saveSubject(subject);
     }
 
-    public boolean addSubject(Subject subject)
-    {
-        return subjects.add(subject);
-    }
-
-    public URI getSubjectPath(Subject subject, UriInfo uriInfo)
-    {
+    public URI getSubjectPath(Subject subject, UriInfo uriInfo){
         UriBuilder ub = uriInfo.getAbsolutePathBuilder();
         return ub.path(subject.getId()+"").build();
     }
 
-    public void updateSubject(Subject currentSubject, Subject newSubject)
-    {
-        int index = subjects.indexOf(currentSubject);
-        int subjectId = currentSubject.getId();
-        newSubject.setId(subjectId);
-        subjects.set(index,newSubject);
+    public void updateSubject(ObjectId id, Subject newSubject){
+        newSubject.setId(id);
+        dao.updateSubject(newSubject);
     }
 
-    public void deleteSubject(Subject subject)
-    {
-        this.subjects.remove(subject);
+    public void deleteSubject(Subject subject){
+        dao.delete(subject);
     }
 
-    public List<Subject> getSubjects()
-    {
-        return subjects;
+    public static synchronized SubjectService getInstance(){
+        if(subjectService == null){
+            subjectService = new SubjectService();
+        }
+        return subjectService;
     }
 
 }

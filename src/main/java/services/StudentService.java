@@ -1,67 +1,43 @@
 package services;
-
 import common.Mark;
-import common.MarkValues;
 import common.Student;
 import common.Subject;
-
+import dao.IDao;
+import dao.MongoDao;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-public class StudentService
-{
-    private List<Student> studentList = new ArrayList<>();
-    private static SubjectService subjectsService = SubjectService.getInstance();
-    private static StudentService studentsService;
-    private StudentService(){
-        for(int i =0;i<10;i++) {
-            Student student = new Student("Name"+i, "Surname"+i, new Date());
-            studentList.add(student);
-            for(int j = 0;j<10;j++){
-                int size = subjectsService.getSubjects().size();
-                Mark mark = new Mark(MarkValues.getMarkValue((j%3+2) +""),subjectsService.getSubject(j%size));
-                addStudentMark(student,mark);
-            }
-        }
-    }
+public class StudentService {
+    private IDao dao = MongoDao.getInstance();
+    private static StudentService studentService;
+    private StudentService(){ }
 
     public Student getStudent(int index){
-        for(Student student: studentList){
-            if(student.getIndex() == index){
-                return student;
-            }
-        }
-        return null;
+        return dao.getStudent(index);
     }
 
-    public List<Student> getStudentList()
-    {
-        return studentList;
+    public List<Student> getStudentList(MultivaluedMap<String, String> params){
+        return dao.getStudents(params);
     }
 
-    public boolean addStudent(Student student){
-        return this.studentList.add(student);
+    public URI addStudent(Student student, UriInfo uriInfo){
+        dao.saveStudent(student);
+        return getStudentPath(student, uriInfo);
     }
 
-    public void updateStudent(Student currentStudent, Student newStudent){
-        int index = studentList.indexOf(currentStudent);
-        int studentIndex = currentStudent.getIndex();
-        newStudent.setIndex(studentIndex);
-        getStudentList().set(index,newStudent);
-    }
-
-    public static synchronized StudentService getInstance(){
-        if(studentsService == null){
-            studentsService = new StudentService();
-        }
-        return studentsService;
+    public void updateStudent(int index, Student newStudent){
+        newStudent.setIndex(index);
+        dao.updateStudent(newStudent);
     }
 
     public URI getStudentPath(Student student, UriInfo uriInfo){
         UriBuilder ub = uriInfo.getAbsolutePathBuilder();
-        return ub.path(String.valueOf(student.getIndex())).build();
+        return ub.path(student.getIndex() + "").build();
     }
 
     public Set<Subject> getStudentSubjects(Student student){
@@ -72,37 +48,15 @@ public class StudentService
         return studentSubjects;
     }
 
-    public Mark addStudentMark(Student student, Mark mark){
-        student.getMarks().add(mark);
-        return mark;
-    }
-
     public void deleteStudent(Student student){
-        this.studentList.remove(student);
+        dao.delete(student);
     }
 
-    public Mark getStudentMark(Student student, long id){
-        for(Mark m: student.getMarks()){
-            if(m.getId() == id){
-                return m;
-            }
+    public static synchronized StudentService getInstance(){
+        if(studentService == null){
+            studentService = new StudentService();
         }
-        return null;
-    }
-
-    public void deleteStudentMark(Student student, Mark mark){
-        student.getMarks().remove(mark);
-    }
-
-    public URI getMarkPath(Student student, Mark mark, UriInfo uriInfo) {
-        UriBuilder ub = uriInfo.getAbsolutePathBuilder();
-        return ub.path(student.getIndex()+"/"+mark.getId()).build();
-    }
-
-    public void updateStudentMark(Student student, Mark currentMark, Mark newMark) {
-        int index = student.getMarks().indexOf(currentMark);
-        int markId = currentMark.getId();
-        newMark.setId(markId);
-        student.getMarks().set(index,newMark);
+        return studentService;
     }
 }
+

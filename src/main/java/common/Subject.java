@@ -1,43 +1,59 @@
 package common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dao.ObjectIdJaxvAdapter;
+import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import resources.SubjectResource;
+import resources.SubjectsResource;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.ws.rs.core.Link;
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.List;
 
+@Entity
+@NoArgsConstructor
 @XmlRootElement(name = "subject")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Subject
 {
-    @JsonIgnore
+
+    @Id
     @XmlTransient
-    private int id;
-
-    public int getId()
-    {
-        return id;
-    }
-
-    public void setId(int id)
-    {
-        this.id = id;
-    }
+    @XmlJavaTypeAdapter(ObjectIdJaxvAdapter.class)
+    private ObjectId id;
 
     private String name;
     private String teacher;
 
-    public Subject()
-    {
-        this.id = Utils.getSubjectId();
+    @InjectLinks({
+            @InjectLink(resource = SubjectsResource.class, rel = "parent", style = InjectLink.Style.ABSOLUTE),
+            @InjectLink(resource = SubjectResource.class, rel = "self", style = InjectLink.Style.ABSOLUTE)
+    })
+    @XmlElement(name = "link")
+    @XmlElementWrapper(name = "links")
+    @XmlJavaTypeAdapter(Link.JaxbAdapter.class)
+    private List<Link> links;
+
+    public Subject(ObjectId id, String teacher, String name) {
+        this.id = id;
+        this.teacher = teacher;
+        this.name = name;
     }
 
-    public Subject(String name, String teacher)
+    public List<Link> getLinks()
     {
-        this();
-        this.name = name;
-        this.teacher = teacher;
+        return links;
+    }
+
+    public void setLinks(List<Link> links)
+    {
+        this.links = links;
     }
 
     public String getName()
@@ -58,5 +74,15 @@ public class Subject
     public void setTeacher(String teacher)
     {
         this.teacher = teacher;
+    }
+
+    public ObjectId getId()
+    {
+        return id;
+    }
+
+    public void setId(ObjectId id)
+    {
+        this.id = id;
     }
 }
