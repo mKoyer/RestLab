@@ -56,11 +56,11 @@ public class MongoDao implements IDao
             if (params.containsKey(key))
                 query.field(key).containsIgnoreCase(params.getFirst(key));
         }
-        String birthdate = "birthdate";
-        if(params.containsKey(birthdate)){
+        String birthDate = "birthDate";
+        if(params.containsKey(birthDate)){
             Date date = null;
             try {
-                date = new SimpleDateFormat("yyyy-MM-dd").parse(params.getFirst(birthdate));
+                date = new SimpleDateFormat("yyyy-MM-dd").parse(params.getFirst(birthDate));
             } catch (ParseException e) {
                 throw new BadRequestException();
             }
@@ -70,13 +70,13 @@ public class MongoDao implements IDao
             }
             switch (op){
                 case "gt":
-                    query.field(birthdate).greaterThan(date);
+                    query.field(birthDate).greaterThan(date);
                     break;
                 case "lt":
-                    query.field(birthdate).lessThan(date);
+                    query.field(birthDate).lessThan(date);
                     break;
                 default:
-                    query.field(birthdate).equal(date);
+                    query.field(birthDate).equal(date);
             }
 
         }

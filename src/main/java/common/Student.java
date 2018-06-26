@@ -66,7 +66,7 @@ public class Student
     private int index;
     private String name;
     private String surname;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "CEST")
     private Date birthDate;
     @JsonIgnore
     @XmlTransient
